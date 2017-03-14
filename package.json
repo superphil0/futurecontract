@@ -1,5 +1,6 @@
 {
   "name": "ethereum-js-sample",
+  "version": 1,
   "dependencies": {
     "async": "^1.5.2",
     "ethereumjs-tx": "^1.0.0",
