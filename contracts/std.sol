@@ -29,7 +29,7 @@ contract NameReg {
 
 contract nameRegAware {
   function nameRegAddress() returns (address) {
-    return 0x084f6a99003dae6d3906664fdbf43dd09930d0e3;
+    return 0xdedb49385ad5b94a16f236a6890cf9e0b1e30392;
   }
   
   function named(bytes32 name) returns (address) {
