@@ -1,0 +1,148 @@
+  <body>
+<div>  Contract address: </div> <input id='contractaddress' placeholder='contract address' value="0xdb9aeb21584a20d8db30af19e3a8f36b21215c0a"/>
+<br>
+<br>
+
+<div id="balance">  Account Balance: </div> 
+<br>
+<br>
+
+      <input id="amount" type="number" placeholder="amount"/>
+      <input id="price" type="number" placeholder="price"/>
+      <input id="exercise_date" type="date" placeholder="exercise date"/>
+      <button id="makeOffer" onClick="makeOffer()">Make Offer</button>
+
+	<br> <br>
+      <input id="offerId" type="number" placeholder="offer id"/>
+      <button id="makeBid" onClick="makeBid()">Make Bid</button>
+
+<div id='wait' ></div>
+  <div id='offers'>
+  <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Offer id</th>
+                  <th>Exercise Date</th>
+                  <th>Sold</th>
+                  <th>Price</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+			   <tbody id="transactions">
+              </tbody>
+            </table>
+    </div>
+	
+     <div id='log'>
+    </div>
+ 
+ 
+
+<script type="text/javascript">
+
+function makeOffer() {
+    var contract = contractspec.at(document.getElementById('contractaddress').value);
+	var datee = new Date(document.getElementById('exercise_date').value).getTime() / 1000;
+	var amount = parseInt(document.getElementById('amount').value);
+	var price = parseInt(document.getElementById('price').value);
+    contract.makeOffer(amount, datee, price,
+	function (error, txHash) {
+        tryTillResponse(txHash, function (error, receipt) {
+            alert('done ' + txHash)
+        })
+    })
+}
+
+function makeBid() {
+    var contract = contractspec.at(document.getElementById('contractaddress').value)
+    contract.makeBid(parseInt(document.getElementById('offerId').value),
+	{ value: contract.getOffer(parseInt(document.getElementById('offerId').value))[2] * Math.pow(10,18) }
+    , function (error, txHash) {
+        tryTillResponse(txHash, function (error, receipt) {
+            alert('done ' + txHash)
+        })
+    })
+}
+
+
+var abi = [{"constant":false,"inputs":[{"name":"offerId","type":"uint256"}],"name":"makeBid","outputs":[],"payable":true,"type":"function"},{"constant":true,"inputs":[{"name":"offerId","type":"uint256"}],"name":"getOffer","outputs":[{"name":"","type":"uint256"},{"name":"","type":"bool"},{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"offers","outputs":[{"name":"exercise_date","type":"uint256"},{"name":"sold","type":"bool"},{"name":"amount","type":"uint256"},{"name":"price","type":"uint256"},{"name":"buyer","type":"address"},{"name":"seller","type":"address"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"changeOwner","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"amount","type":"uint256"},{"name":"exercise_date","type":"uint256"},{"name":"price","type":"uint256"}],"name":"makeOffer","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getNumberOfOffers","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"payable":false,"type":"fallback"}]
+;
+
+
+var contractspec = web3.eth.contract(abi);
+web3.eth.defaultAccount = web3.eth.accounts[0];
+function tryTillResponse (txhash, done) {
+    document.getElementById('wait').innerHTML = 'waiting for the transaction to be mined ...'
+    web3.eth.getTransactionReceipt(txhash, function (err, result) {
+        if (!err && !result) {
+            // Try again with a bit of delay
+            setTimeout(function () { tryTillResponse(txhash, done) }, 500)
+        } else {
+            document.getElementById('wait').innerHTML = ''
+            var log = document.createElement("div")
+            log.innerHTML = JSON.stringify(result, null, 2);
+            document.getElementById('log').appendChild(log)
+            done(err,result)
+        }
+    })
+}
+
+function refreshOffers () {
+      var contract = contractspec.at(document.getElementById('contractaddress').value);
+	  var number = contract.getNumberOfOffers();
+	  var tableRef = document.getElementById('transactions');
+	  var new_tbody = document.createElement('tbody');
+		var att = document.createAttribute("id");       // Create a "class" attribute
+		att.value = "transactions";                           // Set the value of the class attribute
+		new_tbody.setAttributeNode(att);
+
+	  tableRef.parentNode.replaceChild(new_tbody, tableRef);
+var log = document.getElementById('balance');
+            log.innerHTML = "Account balance: " + web3.fromWei(web3.eth.getBalance(web3.eth.defaultAccount),'ether') ;
+		
+	  for (i = 0; i < number; i++)
+	  {
+	  	  bla = contract.getOffer(i);
+		  var newRow   = new_tbody.insertRow(new_tbody.rows.length);
+		// Insert a cell in the row at index 0
+			var newCell  = newRow.insertCell(0);	
+			var newText  = document.createTextNode(i);
+			newCell.appendChild(newText);
+		
+		for (j = 0; j<4; j++)
+		{
+			var newCell  = newRow.insertCell(j+1);		
+			if (j > 1)
+			{
+			var newText  = document.createTextNode(bla[j].toNumber());
+			newCell.appendChild(newText);
+			}		
+			else if(j == 0)
+			{
+			var newText  = document.createTextNode(new Date(bla[j].toNumber()*1000).toString());
+			newCell.appendChild(newText);
+			}
+			else{
+			var newText  = document.createTextNode(bla[j]);
+			newCell.appendChild(newText);
+			}
+		}
+	  }
+
+            
+			
+            setTimeout(function () { refreshOffers() }, 3000)
+       
+}
+
+refreshOffers();
+</script> 
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</body>

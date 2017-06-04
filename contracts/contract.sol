@@ -11,6 +11,7 @@ contract Contract is owned {
     uint amount;
     uint price;
     address buyer;
+    address seller;
   }
   
   // This holds all offers which are made
@@ -49,7 +50,16 @@ contract Contract is owned {
     offers[offerId].seller.transfer(offers[offerId].price);
     
   }
+  function getOffer(uint offerId) constant returns (uint, bool, uint, uint)
+  {
+      Offer offf = offers[offerId];
+      return (offf.exercise_date, offf.sold, offf.amount, offf.price);
+  }
   
+  function getNumberOfOffers() constant returns (uint)
+  {
+      return offers.length;
+  }
     // Fallback function - Called if other functions don't match call or
     // sent ether without data
     // Typically, called when invalid data is sent
